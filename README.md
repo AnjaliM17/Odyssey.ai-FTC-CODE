@@ -1,2 +1,4 @@
 # Odyssey.ai-FTC-CODE
-Odyssey.ai Code for FTC Robot 
+HI be nice and dont be destructive :DDD 
+
+ty for your cooperation
