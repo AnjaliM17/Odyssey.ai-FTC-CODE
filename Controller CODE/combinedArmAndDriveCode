@@ -1,0 +1,160 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+@TeleOp(name = "CombinedArmAndDriveTest")
+public class CombinedArmAndDriveTest extends LinearOpMode {
+
+    // Arm and Servo
+    private DcMotor Extmotor;
+    private CRServo crServo;
+    private ElapsedTime runtime = new ElapsedTime();
+
+    private int pulsesPerRotation = 1120;
+    private int maxRotations = 20;
+    private int currentRotations = 0;
+
+    // Drive Motors
+    private DcMotor frontRight;
+    private DcMotor backRight;
+    private DcMotor frontLeft;
+    private DcMotor backLeft;
+
+    @Override
+    public void runOpMode() {
+        // Initialize Arm and Servo
+        Extmotor = hardwareMap.dcMotor.get("Extmotor");
+        crServo = hardwareMap.get(CRServo.class, "conServo");
+
+        Extmotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        Extmotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Initialize Drive Motors
+        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
+        backRight = hardwareMap.get(DcMotor.class, "backRight");
+        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
+
+        frontRight.setDirection(DcMotor.Direction.REVERSE);
+        backRight.setDirection(DcMotor.Direction.REVERSE);
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+            // Arm and Servo Control (Gamepad 2)
+            int currentEncoderPosition = Extmotor.getCurrentPosition();
+            currentRotations = Math.abs(currentEncoderPosition) / pulsesPerRotation;
+
+            float rightStickY = -gamepad2.right_stick_y;
+
+            if (Math.abs(rightStickY) > 0.1) {
+                if (rightStickY > 0 && currentRotations < maxRotations) {
+                    Extmotor.setPower(rightStickY);
+                } else if (rightStickY < 0 && currentRotations > 0) {
+                    Extmotor.setPower(rightStickY);
+                } else {
+                    Extmotor.setPower(0);
+                }
+            } else if (gamepad2.dpad_up) {
+                Extmotor.setPower(0.5);
+            } else if (gamepad2.dpad_down) {
+                Extmotor.setPower(-0.5);
+            } else {
+                Extmotor.setPower(0);
+            }
+
+            double servoPower = gamepad2.left_stick_y;
+            float  armrotatespeed = gamepad2.left_stick_y;
+            crServo.setPower(servoPower);
+
+            if (gamepad2.a) {
+                rotateForTime(1.0, 2.0);
+            } else if (gamepad2.b) {
+                rotateForTime(-1.0, 2.0);
+            } else if (gamepad2.x) {
+                rotateFullRevolution(1.0);
+            } else if (gamepad2.y) {
+                rotateFullRevolution(-1.0);
+            }
+
+            if (gamepad2.left_bumper) {
+                resetMotorToZero();
+            } else if (gamepad2.right_bumper) {
+                moveMotorToMaxRotation();
+            }
+
+            // Drive Control (Gamepad 1)
+            float forward = -gamepad1.right_stick_y;
+            float strafe = -gamepad1.right_stick_x;
+            float turn = -gamepad1.left_stick_x;
+
+            if (gamepad1.left_bumper) {
+                forward /= 2;
+                strafe /= 2;
+                turn /= 2;
+            } else if (gamepad1.right_bumper) {
+                forward *= 2;
+                strafe *= 2;
+                turn *= 2;
+            }
+
+            double denominator = Math.max(1, Math.abs(forward) + Math.abs(strafe) + Math.abs(turn));
+
+            frontLeft.setPower((forward + strafe + turn) / denominator);
+            backLeft.setPower((forward - strafe + turn) / denominator);
+            frontRight.setPower((forward - strafe - turn) / denominator);
+            backRight.setPower((forward + strafe - turn) / denominator);
+
+            // Telemetry
+            telemetry.addData("Extmotor Position", currentEncoderPosition);
+            telemetry.addData("Extmotor Rotations", currentRotations);
+            telemetry.addData("Extmotor Power", Extmotor.getPower());
+            telemetry.addData("CRServo Power", "%.2f", servoPower);
+            telemetry.addData("Drive Forward", forward);
+            telemetry.addData("Drive Strafe", strafe);
+            telemetry.addData("Drive Turn", turn);
+            telemetry.update();
+        }
+    }
+
+    private void rotateForTime(double power, double seconds) {
+        runtime.reset();
+        while (opModeIsActive() && runtime.seconds() < seconds) {
+            crServo.setPower(power);
+            telemetry.addData("Rotating", power > 0 ? "Clockwise" : "Counter-Clockwise");
+            telemetry.addData("Time", "%.2f", runtime.seconds());
+            telemetry.update();
+        }
+        crServo.setPower(0);
+    }
+
+    private void rotateFullRevolution(double power) {
+        double revolutionTime = 1.5; // Adjust this value based on your servo's speed
+        rotateForTime(power, revolutionTime);
+    }
+
+    private void resetMotorToZero() {
+        int reverseTargetPosition = Extmotor.getCurrentPosition() - currentRotations * pulsesPerRotation;
+        Extmotor.setTargetPosition(reverseTargetPosition);
+        Extmotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        Extmotor.setPower(-1.0);
+        telemetry.addData("Motor Reset", "Motor is reversing to 0 rotations.");
+    }
+
+    private void moveMotorToMaxRotation() {
+        int targetPosition = (maxRotations - currentRotations) * pulsesPerRotation + Extmotor.getCurrentPosition();
+        Extmotor.setTargetPosition(targetPosition);
+        Extmotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        Extmotor.setPower(1.0);
+        telemetry.addData("Motor Status", "Motor is moving to max rotations.");
+        telemetry.addData("Target Position", targetPosition);             
+    }
+}
+
