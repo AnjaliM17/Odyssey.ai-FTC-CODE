@@ -14,7 +14,7 @@ public class AutonomousCodeYuhh extends LinearOpMode {
     private DcMotor frontRight;
     private DcMotor backLeft;
     private DcMotor backRight;
-    private DcMotor Extmotor;
+    private DcMotor Extmotor; //Extmotor is not working for some reason. needs to be fixed.
     private CRServo crServo;
     private Servo clawServo;
     private ElapsedTime runtime = new ElapsedTime();
@@ -42,7 +42,7 @@ public class AutonomousCodeYuhh extends LinearOpMode {
         turnRight(-9, 0.1);
         driveForward(-5, 0.1); 
         turnRight(-8, 0.1); // Example of strafing right
-        Extmotor.setPower(0.1);
+        //Extmotor.setPower(0.1); this is not working for some reason, needs to be fixed. may not get fixed as new arm is being built.
 
     }
 
