@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @Autonomous(name = "AutonomousCodeYuhh")
 public class AutonomousCodeYuhh extends LinearOpMode {
 
+    //Declaring resource variables
     private DcMotor frontLeft;
     private DcMotor frontRight;
     private DcMotor backLeft;
