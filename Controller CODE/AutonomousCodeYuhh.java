@@ -45,8 +45,8 @@ public class AutonomousCodeYuhh extends LinearOpMode {
         //Extmotor.setPower(0.1); this is not working for some reason, needs to be fixed. may not get fixed as new arm is being built.
         sleep(5000); // dropped the block into basket, going to get another one.
         driveForward(-3, 0.1);
-        turnRight(10, 0.1); 
-        driveForward(3, 0.1); 
+        turnRight(15, 0.1); 
+        driveForward(3,0.1);
     }
 
     public void driveForward(double distance, double power) {
