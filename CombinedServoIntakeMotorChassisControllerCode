@@ -1,0 +1,106 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+@TeleOp(name = "CombinedServoIntakeMotorChassisControllerCode")
+public class CombinedServoIntakeMotorChassisControllerCode extends LinearOpMode {
+
+    // Servos and Motors
+    private Servo intakeservo;
+    private DcMotor intakemotor;
+    private ElapsedTime runtime = new ElapsedTime();
+
+    // Drive Motors
+    private DcMotor frontRight;
+    private DcMotor backRight;
+    private DcMotor frontLeft;
+    private DcMotor backLeft;
+
+    // Constants
+    private double currentPosition = 0.5; // Start at middle position
+    private static final double JOYSTICK_THRESHOLD = 0.1; // Sensitivity threshold for joystick movement
+    private static final double NEUTRAL_POSITION = 0.5; // Neutral position
+
+    @Override
+    public void runOpMode() {
+        // Initialize Servo and Intake Motor
+        intakeservo = hardwareMap.get(Servo.class, "intakeservo");
+        intakemotor = hardwareMap.get(DcMotor.class, "intakemotor");
+        intakeservo.setPosition(currentPosition);
+
+        // Initialize Drive Motors
+        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
+        backRight = hardwareMap.get(DcMotor.class, "backRight");
+        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
+
+        frontRight.setDirection(DcMotor.Direction.REVERSE);
+        backRight.setDirection(DcMotor.Direction.REVERSE);
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+            // Servo Control (Gamepad 2 right stick)
+            double rightStickX = gamepad2.right_stick_x;
+
+            // Regular Servo Control
+            if (Math.abs(rightStickX) > JOYSTICK_THRESHOLD) {
+                currentPosition = (-rightStickX + 1) / 2;
+                intakeservo.setPosition(currentPosition);
+            } else if (gamepad2.a) {
+                currentPosition = NEUTRAL_POSITION;
+                intakeservo.setPosition(NEUTRAL_POSITION);
+            }
+
+            // Intake Motor Control (Gamepad 2 left stick)
+            float leftY = -gamepad2.left_stick_y; // Negate for correct direction
+            intakemotor.setPower(leftY/6);
+
+            // Drive Control (Gamepad 1)
+            float forward = -gamepad1.right_stick_y;
+            float strafe = -gamepad1.right_stick_x;
+            float turn = -gamepad1.left_stick_x;
+
+            if (gamepad1.left_bumper) {
+                forward /= 2;
+                strafe /= 2;
+                turn /= 2;
+            } else if (gamepad1.right_bumper) {
+                forward *= 2;
+                strafe *= 2;
+                turn *= 2;
+            }
+
+            double denominator = Math.max(1, Math.abs(forward) + Math.abs(strafe) + Math.abs(turn));
+
+            frontLeft.setPower((forward + strafe + turn) / denominator);
+            backLeft.setPower((forward - strafe + turn) / denominator);
+            frontRight.setPower((forward - strafe - turn) / denominator);
+            backRight.setPower((forward + strafe - turn) / denominator);
+
+            // Update telemetry
+            updateTelemetry(forward, strafe, turn);
+
+            // Optional: Add a small delay to prevent over-polling
+            sleep(10);
+        }
+    }
+
+    private void updateTelemetry(float forward, float strafe, float turn) {
+        telemetry.addData("Intake Servo Position", "%.2f", currentPosition);
+        telemetry.addData("Right Joystick X", "%.2f", gamepad2.right_stick_x);
+        telemetry.addData("Intake Motor Power", "%.2f", intakemotor.getPower());
+        telemetry.addData("Left Joystick Y", "%.2f", gamepad2.left_stick_y);
+        telemetry.addData("Drive Forward", forward);
+        telemetry.addData("Drive Strafe", strafe);
+        telemetry.addData("Drive Turn", turn);
+        telemetry.update();
+    }
+}
