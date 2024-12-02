@@ -23,9 +23,14 @@ public class BaseAutonomous extends LinearOpMode  {
     protected DcMotor[] motors = null;
 
     protected static final double ENCODER_TICKS_PER_INCH = 100.0; // Adjust this value based on your robot's configuration
-    protected double x = 0.3;
+
     
-    private void initMotors(DcMotor[] motors){
+    @Override
+    public void runOpMode() throws InterruptedException {
+        this.runOpMode();
+    }
+    
+    protected void initMotors(DcMotor[] motors){
         for(int i=0;i<motors.length;i++){
          initMotor(motors[i]);
         }
@@ -161,4 +166,5 @@ public void driveForward(double distance, double power) {
           backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); 
           backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);  
       }
+
 }

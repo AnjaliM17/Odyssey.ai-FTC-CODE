@@ -14,7 +14,7 @@ import java.lang.InterruptedException;
 public class AutonomousNetZone2 extends BaseAutonomous  {
 
     private static final double ENCODER_TICKS_PER_INCH = 100.0; // Adjust this value based on your robot's configuration
-    private double x = 0.3;
+    private double power = 0.3;
 
     @Override
     public void runOpMode() throws InterruptedException{
@@ -38,15 +38,15 @@ public class AutonomousNetZone2 extends BaseAutonomous  {
         waitForStart();
 
         // Autonomous actions
-        strafe(-4, x);
-        driveForward(-5, x);
+        strafe(-4, power);
+        driveForward(-5, power);
     //   // Thread.sleep(1000);
     //     driveForward(-5, 0.1); 
-         turnRight(-25, x); 
+         turnRight(-25, power); 
         // Extmotor.setPower(0.1);
         // sleep(5000); // dropped the block into basket, going to get another one.
         
-        driveForward(-2.99, x);
+        driveForward(-2.99, power);
         //turnRight(-5, 0.1); 
         // driveForward(7, 0.1); 
         // turnRight(-7,0.1);

@@ -11,6 +11,7 @@ public class AutonomousObservationZone2 extends BaseAutonomous {
 
     private static final double ENCODER_TICKS_PER_INCH = 100.0; // Adjust this value based on your robot's configuration
     private static final double INCHES_PER_FOOT = 12.0;
+    protected double power = 0.3;
 
     @Override
     public void runOpMode() {
