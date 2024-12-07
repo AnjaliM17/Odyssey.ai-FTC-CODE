@@ -1,0 +1,211 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+@TeleOp(name = "TrialFinalCode")
+public class TrialFinalCode extends LinearOpMode {
+
+    // Servos and Motors
+    private Servo bucketservo;
+    private Servo intakeservo;
+    private DcMotor intakemotor;
+    private DcMotor Extmotor;
+    private ElapsedTime runtime = new ElapsedTime();
+
+    // Drive Motors
+    private DcMotor frontRight;
+    private DcMotor backRight;
+    private DcMotor frontLeft;
+    private DcMotor backLeft;
+
+    // Constants and Variables
+    private double intakeServoPosition = 0.5;
+    private static final double JOYSTICK_THRESHOLD = 0.1;
+    private static final double NEUTRAL_POSITION = 0.5;
+
+    // Arm Extension Motor Variables
+    private int minPosition = 0;
+    private int maxPosition = 0;
+    private boolean isCalibrated = false;
+    private boolean inCalibrationMode = false;
+    
+    private enum ArmState {IDLE, MOVING_TO_MIN, MOVING_TO_MAX}
+    private ArmState currentArmState = ArmState.IDLE;
+
+    @Override
+    public void runOpMode() {
+        // Initialize all hardware
+        bucketservo = hardwareMap.get(Servo.class, "bucketservo");
+        intakeservo = hardwareMap.get(Servo.class, "intakeservo");
+        intakemotor = hardwareMap.get(DcMotor.class, "intakemotor");
+        Extmotor = hardwareMap.get(DcMotor.class, "Extmotor");
+        
+        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
+        backRight = hardwareMap.get(DcMotor.class, "backRight");
+        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
+
+        // Set initial positions and modes
+        intakeservo.setPosition(intakeServoPosition);
+        frontRight.setDirection(DcMotor.Direction.REVERSE);
+        backRight.setDirection(DcMotor.Direction.REVERSE);
+
+        // Initialize Arm Extension Motor
+        Extmotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        Extmotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Controls", "Press Y to enter/exit calibration mode");
+        telemetry.update();
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+            if (gamepad2.y && !gamepad2.start) {
+                inCalibrationMode = !inCalibrationMode;
+                sleep(250); // Debounce
+            }
+
+            if (inCalibrationMode) {
+                calibrateArm();
+            } else {
+                normalOperation();
+            }
+
+            driveControl();
+            updateTelemetry();
+            sleep(10);
+        }
+    }
+
+    private void calibrateArm() {
+        float rightStickY = -gamepad2.right_stick_y;
+
+        if (Math.abs(rightStickY) > 0.1) {
+            Extmotor.setPower(rightStickY * 0.5);
+        } else {
+            Extmotor.setPower(0);
+        }
+
+        if (gamepad2.a) {
+            minPosition = Extmotor.getCurrentPosition();
+        }
+
+        if (gamepad2.b) {
+            maxPosition = Extmotor.getCurrentPosition();
+        }
+
+        if (minPosition > maxPosition) {
+            int temp = minPosition;
+            minPosition = maxPosition;
+            maxPosition = temp;
+        }
+
+        isCalibrated = (minPosition != maxPosition);
+    }
+
+    private void normalOperation() {
+        // Bucket Servo Control
+        if (gamepad2.dpad_down) {
+            bucketservo.setPosition(0);   
+        } else if (gamepad2.dpad_up) {
+            bucketservo.setPosition(1);
+        }
+
+        // Intake Servo Control
+        double rightStickX = gamepad2.right_stick_x;
+        if (Math.abs(rightStickX) > JOYSTICK_THRESHOLD) {
+            intakeServoPosition = (-rightStickX + 1) / 2;
+            intakeservo.setPosition(intakeServoPosition);
+        } else if (gamepad2.b) {
+            intakeServoPosition = NEUTRAL_POSITION;
+            intakeservo.setPosition(NEUTRAL_POSITION);
+        }
+
+        // Intake Motor Control
+        float leftStickY = -gamepad2.left_stick_y;
+        intakemotor.setPower(leftStickY / 2);
+
+        // Extension Motor Control
+        if (isCalibrated) {
+            int currentPosition = Extmotor.getCurrentPosition();
+            float rightStickY = -gamepad2.right_stick_y;
+
+            if (gamepad2.dpad_left) {
+                currentArmState = ArmState.MOVING_TO_MIN;
+            } else if (gamepad2.dpad_right) {
+                currentArmState = ArmState.MOVING_TO_MAX;
+            }
+
+            switch (currentArmState) {
+                case MOVING_TO_MIN:
+                    if (currentPosition > minPosition) {
+                        Extmotor.setPower(-0.5);
+                    } else {
+                        Extmotor.setPower(0);
+                        currentArmState = ArmState.IDLE;
+                    }
+                    break;
+                case MOVING_TO_MAX:
+                    if (currentPosition < maxPosition) {
+                        Extmotor.setPower(0.5);
+                    } else {
+                        Extmotor.setPower(0);
+                        currentArmState = ArmState.IDLE;
+                    }
+                    break;
+                case IDLE:
+                    if (Math.abs(rightStickY) > 0.1) {
+                        if ((rightStickY < 0 && currentPosition > minPosition) || 
+                            (rightStickY > 0 && currentPosition < maxPosition)) {
+                            Extmotor.setPower(rightStickY);
+                        } else {
+                            Extmotor.setPower(0);
+                        }
+                    } else {
+                        Extmotor.setPower(0);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void driveControl() {
+        float forward = -gamepad1.right_stick_y;
+        float strafe = -gamepad1.right_stick_x;
+        float turn = -gamepad1.left_stick_x;
+
+        if (gamepad1.left_bumper) {
+            forward /= 2;
+            strafe /= 2;
+            turn /= 2;
+        } else if (gamepad1.right_bumper) {
+            forward *= 2;
+            strafe *= 2;
+            turn *= 2;
+        }
+
+        double denominator = Math.max(1, Math.abs(forward) + Math.abs(strafe) + Math.abs(turn));
+
+        frontLeft.setPower((forward + strafe + turn) / denominator);
+        backLeft.setPower((forward - strafe + turn) / denominator);
+        frontRight.setPower((forward - strafe - turn) / denominator);
+        backRight.setPower((forward + strafe - turn) / denominator);
+    }
+
+    private void updateTelemetry() {
+        telemetry.addData("Mode", inCalibrationMode ? "Calibration" : "Normal");
+        telemetry.addData("Bucket Servo Position", bucketservo.getPosition());
+        telemetry.addData("Intake Servo Position", intakeServoPosition);
+        telemetry.addData("Intake Motor Power", intakemotor.getPower());
+        telemetry.addData("Extmotor Position", Extmotor.getCurrentPosition());
+        telemetry.addData("Min Position", minPosition);
+        telemetry.addData("Max Position", maxPosition);
+        telemetry.addData("Arm State", currentArmState);
+        telemetry.update();
+    }
+}
