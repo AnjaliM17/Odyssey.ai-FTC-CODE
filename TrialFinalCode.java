@@ -51,8 +51,10 @@ public class TrialFinalCode extends LinearOpMode {
 
         // Set initial positions and modes
         intakeservo.setPosition(intakeServoPosition);
-        frontRight.setDirection(DcMotor.Direction.REVERSE);
-        backRight.setDirection(DcMotor.Direction.REVERSE);
+        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
+        backRight = hardwareMap.get(DcMotor.class, "backRight");
+        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
 
         // Initialize Arm Extension Motor
         Extmotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
