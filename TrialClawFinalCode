@@ -1,0 +1,123 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+@TeleOp(name = "TrialClawFinalCode")
+public class TrialClawFinalCode extends LinearOpMode {
+
+    // Servos and Motors
+    private Servo bucketservo;
+    private Servo intakeservo;
+    private Servo clawservo;
+    private DcMotor intakemotor;
+    private DcMotor Extmotor;
+    private ElapsedTime runtime = new ElapsedTime();
+
+    // Drive Motors
+    private DcMotor frontRight;
+    private DcMotor backRight;
+    private DcMotor frontLeft;
+    private DcMotor backLeft;
+
+    // Constants and Variables
+    private double intakeServoPosition = 0.5;
+    private static final double JOYSTICK_THRESHOLD = 0.1;
+    private static final double NEUTRAL_POSITION = 0.5;
+
+    // Arm Extension Motor Variables
+    private int minPosition = 0;
+    private int maxPosition = 0;
+    private boolean isCalibrated = false;
+    private boolean inCalibrationMode = false;
+    
+    private enum ArmState {IDLE, MOVING_TO_MIN, MOVING_TO_MAX}
+    private ArmState currentArmState = ArmState.IDLE;
+
+    @Override
+    public void runOpMode() {
+        // Initialize all hardware
+        bucketservo = hardwareMap.get(Servo.class, "bucketservo");
+        intakeservo = hardwareMap.get(Servo.class, "intakeservo");
+        clawservo = hardwareMap.get(Servo.class, "clawservo");
+        intakemotor = hardwareMap.get(DcMotor.class, "intakemotor");
+        Extmotor = hardwareMap.get(DcMotor.class, "Extmotor");
+        
+        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
+        backRight = hardwareMap.get(DcMotor.class, "backRight");
+        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
+
+        // Set initial positions and modes
+        intakeservo.setPosition(intakeServoPosition);
+        frontLeft.setDirection(DcMotor.Direction.REVERSE);
+        frontRight.setDirection(DcMotor.Direction.FORWARD);
+        backLeft.setDirection(DcMotor.Direction.REVERSE);
+        backRight.setDirection(DcMotor.Direction.FORWARD);
+
+        // Initialize Arm Extension Motor
+        Extmotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        Extmotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Controls", "Press Y to enter/exit calibration mode");
+        telemetry.update();
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+            if (gamepad2.y && !gamepad2.start) {
+                inCalibrationMode = !inCalibrationMode;
+                sleep(250); // Debounce
+            }
+
+            if (inCalibrationMode) {
+                calibrateArm();
+            } else {
+                normalOperation();
+            }
+
+            driveControl();
+            clawControl();
+            updateTelemetry();
+            sleep(10);
+        }
+    }
+
+    private void calibrateArm() {
+        // ... (calibration code remains the same)
+    }
+
+    private void normalOperation() {
+        // ... (normal operation code remains the same)
+    }
+
+    private void driveControl() {
+        // ... (drive control code remains the same)
+    }
+
+    private void clawControl() {
+        if (gamepad2.dpad_right) {
+            clawservo.setPosition(1);
+        } 
+        else if (gamepad2.dpad_left) {
+            clawservo.setPosition(0.3);
+        }
+    }
+
+    private void updateTelemetry() {
+        telemetry.addData("Mode", inCalibrationMode ? "Calibration" : "Normal");
+        telemetry.addData("Bucket Servo Position", bucketservo.getPosition());
+        telemetry.addData("Intake Servo Position", intakeServoPosition);
+        telemetry.addData("Intake Motor Power", intakemotor.getPower());
+        telemetry.addData("Extmotor Position", Extmotor.getCurrentPosition());
+        telemetry.addData("Min Position", minPosition);
+        telemetry.addData("Max Position", maxPosition);
+        telemetry.addData("Arm State", currentArmState);
+        telemetry.addData("Claw Servo Position", clawservo.getPosition());
+        telemetry.update();
+    }
+}
