@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode;
+//1/10/25
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -51,11 +52,12 @@ public class TrialMotorIntakeFinalCode2 extends LinearOpMode {
         backRight = hardwareMap.get(DcMotor.class, "backRight");
         frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
         backLeft = hardwareMap.get(DcMotor.class, "backLeft");
-
-        // Set initial positions and modes
-       // intakeservo.setPosition(intakeServoPosition);
+    // intil    
         frontRight.setDirection(DcMotor.Direction.REVERSE);
         backRight.setDirection(DcMotor.Direction.REVERSE);
+        // Set initial positions and modes
+       // intakeservo.setPosition(intakeServoPosition);
+     
 
         
         // Initialize Arm Extension Motor
@@ -98,7 +100,7 @@ public class TrialMotorIntakeFinalCode2 extends LinearOpMode {
         if (gamepad2.a) {
             minPosition = Extmotor.getCurrentPosition();
             maxPosition = minPosition - 7500;
-    
+        
         }
         
         if (minPosition > maxPosition) {
@@ -215,3 +217,4 @@ public class TrialMotorIntakeFinalCode2 extends LinearOpMode {
         telemetry.update();
     }
 }
+
