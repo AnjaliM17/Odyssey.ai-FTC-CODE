@@ -97,8 +97,8 @@ public class TrialMotorIntakeFinalCode2 extends LinearOpMode {
 
         if (gamepad2.a) {
             minPosition = Extmotor.getCurrentPosition();
-            maxPosition = minPosition + 7500;
-        
+            maxPosition = minPosition - 7500;
+    
         }
         
         if (minPosition > maxPosition) {
