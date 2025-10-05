@@ -1,0 +1,46 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+
+//@TeleOp(name = "Camera Control")
+public class CameraControl extends LinearOpMode {
+
+    private VisionPortal myVisionPortal;
+
+    @Override
+    public void runOpMode() {
+        telemetry.addData(">", "Press Play to start OpMode");
+        telemetry.update();
+
+        waitForStart(); // First waitForStart() to wait for user to press play
+
+        try {
+            myVisionPortal = new VisionPortal.Builder()
+                    .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                    .build();
+
+            if (opModeIsActive()) {
+                myVisionPortal.resumeStreaming();
+                telemetry.addData("Camera", "Streaming ON");
+                telemetry.update();
+
+                while (opModeIsActive()) {
+                    if (gamepad1.dpad_down) {
+                        myVisionPortal.stopStreaming();
+                        telemetry.addData("Camera", "Streaming OFF");
+                    } else if (gamepad1.dpad_up) {
+                        myVisionPortal.resumeStreaming();
+                        telemetry.addData("Camera", "Streaming ON");
+                    }
+                    telemetry.update();
+                }
+            }
+        } catch (Exception e) {
+            telemetry.addData("Error", "An error occurred: " + e.getMessage());
+            telemetry.update();
+        }
+    }
+}

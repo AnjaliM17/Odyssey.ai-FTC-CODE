@@ -1,0 +1,34 @@
+package org.firstinspires.ftc.decode.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+@Autonomous
+public class RunMotor extends LinearOpMode {
+    // introduce motor to program
+    private DcMotor proto_intake;
+
+    @Override
+  
+    public void runOpMode() throws InterruptedException {
+
+        // initialize motor
+        proto_intake = hardwareMap.get(DcMotor.class, "proto_intake");
+
+        // reset encoder
+        proto_intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        // use encoder throughout program
+        proto_intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // wait until program is started on driver hub
+        waitForStart();
+
+        while (opModeIsActive()) {
+            proto_intake.setPower(1);
+            telemetry.addData("proto_intake", proto_intake.getCurrentPosition());
+            telemetry.update();
+        }
+    }
+}
