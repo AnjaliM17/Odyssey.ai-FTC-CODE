@@ -1,0 +1,68 @@
+package org.firstinspires.ftc.teamcode; // Make sure this matches your team's package
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+
+@TeleOp(name = "Camera Stream Viewer", group = "Vision")
+// @Disabled // Make sure this is commented out to show the OpMode on the Driver Station
+public class CameraStreamViewer extends LinearOpMode {
+
+    private VisionPortal visionPortal;
+
+    @Override
+    public void runOpMode() {
+        telemetry.addData("Status", "Initializing...");
+        telemetry.update();
+
+        // --- Initialize the VisionPortal ---
+        // This is the modern and correct way to set up a simple camera stream.
+        try {
+            visionPortal = new VisionPortal.Builder()
+                    .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1")) // Use your webcam's name from the config
+                    .enableLiveView(true)       // This is all you need for streaming!
+                    .setAutoStopLiveView(true)  // Automatically stop the stream when the OpMode ends
+                    .build();
+        } catch (Exception e) {
+            // Catches errors during initialization, such as the webcam not being plugged in or configured.
+            telemetry.addData("Error", "Failed to initialize VisionPortal: " + e.getMessage());
+            telemetry.update();
+            // Wait for 5 seconds to give the user time to read the error message.
+            sleep(5000);
+            return; // Exit the OpMode gracefully if initialization fails.
+        }
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.addData(">", "Press Play to start.");
+        telemetry.addData(">", "Camera stream is available in the three-dots menu.");
+        telemetry.update();
+
+        waitForStart();
+
+        // The OpMode simply needs to stay running to keep the stream alive.
+        // The while loop can be empty, but it's good practice to add telemetry or a sleep.
+        while (opModeIsActive() && !isStopRequested()) {
+
+            // You can add telemetry here to see the camera state for debugging.
+            if (visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+                telemetry.addData("Camera", "Streaming!");
+                telemetry.addData("FPS", "%.2f", visionPortal.getFps());
+            } else {
+                telemetry.addData("Camera", "Status: " + visionPortal.getCameraState());
+            }
+
+            telemetry.update();
+
+            // Give the CPU a break; a short sleep prevents the OpMode from using all available resources.
+            sleep(20);
+        }
+
+        // The visionPortal will be closed automatically because we used .setAutoStopLiveView(true).
+        // If you did not use that, you would need to manually close it here:
+        // visionPortal.close();
+
+        telemetry.addData("Status", "Stopped");
+        telemetry.update();
+    }
+}
